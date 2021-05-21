@@ -24,32 +24,29 @@ weatherApp.config(function ($routeProvider) {
 
 
 
-
-
-
 weatherApp.service('weatherService', function () {
 
-    
-    var chMistoNemirovskeShose = 
-    {
-    "name": "Немирівське Шосе 84",
-    "lat":"49.22687458369613",
-    "lon":"28.53870771897157"
-    }
-    
+
+    var chMistoNemirovskeShose =
+        {
+            "name": "Немирівське Шосе 84",
+            "lat": "49.22687458369613",
+            "lon": "28.53870771897157"
+        }
+
     let chMistoIakovaShepeliaSt =
-    {
-    "name": "Якова Штепеля",
-    "lat":"49.208530306399346",
-    "lon":"22.849301837142939"
-    }
+        {
+            "name": "Якова Штепеля",
+            "lat": "49.208530306399346",
+            "lon": "22.849301837142939"
+        }
 
     let chMistoBarskeShose =
-    {
-    "name": "Барське Шосе",
-    "lat":"49.23710269520618",
-    "lon":"28.398134459453864"
-    }
+        {
+            "name": "Барське Шосе",
+            "lat": "49.23710269520618",
+            "lon": "28.398134459453864"
+        }
 
     // var self = this;
     this.city = 'City'
@@ -57,10 +54,10 @@ weatherApp.service('weatherService', function () {
     this.searchingLocation = "";
 })
 
-weatherApp.controller('homeController', ['$scope', 'weatherService','$resource', function ($scope, weatherService, $resource) {
+weatherApp.controller('homeController', ['$scope', 'weatherService', '$resource', function ($scope, weatherService, $resource) {
 
 
-     $scope.chystiMista = weatherService.chystiMista;
+    $scope.chystiMista = weatherService.chystiMista;
 
     $scope.$watch('searchingLocation', function () {
 
@@ -70,30 +67,55 @@ weatherApp.controller('homeController', ['$scope', 'weatherService','$resource',
 }]);
 
 
-weatherApp.controller('forecastController', ['$scope', 'weatherService', '$resource', '$routeParams',function ($scope, weatherService, $resource, $routeParams) {
-  
+weatherApp.controller('forecastController', ['$scope', 'weatherService', '$resource', '$routeParams', function ($scope, weatherService, $resource, $routeParams) {
+
     $scope.locatoinName = weatherService.searchingLocation.name;
     searvhingLat = weatherService.searchingLocation.lat;
     searvhingLon = weatherService.searchingLocation.lon;
+
     $scope.days = $routeParams.days || 2;
 
     $scope.weatherAPI = $resource("http://api.openweathermap.org/data/2.5/forecast",
-    {callback: "JSON_CALLBACK"},  {get:{ method:"JSONP"}});
- 
-    $scope.weatherResault = $scope.weatherAPI.get({lat:searvhingLat,lon:searvhingLon
-        , appid:'6704185231a3fc5312b081a7659a853b',units:'metric', lang:'ua' });
+        {callback: "JSON_CALLBACK"}, {get: {method: "JSONP"}});
+
+    let dayToWhetherResponceInstance = new Map()
+
+    $scope.weatherResault = $scope.weatherAPI.get({
+        lat: searvhingLat,
+        lon: searvhingLon,
+        appid: '6704185231a3fc5312b081a7659a853b',
+        units: 'metric',
+        lang: 'ua'
+    }).$promise.then(function (allWeatherList) {
+        // allWeatherList.list.forEach(element => console.log(element));
+        allWeatherList.list.forEach((wheatherInstance) => {
+                let day = new Date(wheatherInstance.dt * 1000);
+                let dayNumb = day.getDay();
+                if (!dayToWhetherResponceInstance.has(dayNumb)) {
+                    dayToWhetherResponceInstance.set(dayNumb, [wheatherInstance]);
+                } else {
+                    let keyForCurrentDay = dayToWhetherResponceInstance.get(dayNumb);
+                    keyForCurrentDay.push(wheatherInstance);
+                }
+            }
+        );
+        for (let [key, value] of dayToWhetherResponceInstance) {
+            console.log(key + ' = ' + value)
+        }
+    });
+
     console.log($scope.weatherResault);
 
 
-    $scope.convertToFahrenheit = function(degK){
-           return Math.round((1.8*(degK-273)));
-    
-        }
+    $scope.convertToFahrenheit = function (degK) {
+        return Math.round((1.8 * (degK - 273)));
 
-        $scope.convertToDate = function(dt){
-           return new Date(dt * 1000);
-     
-         }  
+    }
+
+    $scope.convertToDate = function (dt) {
+        //    return new Date(dt * 1000);
+        return dt;
+    }
 }])
 
 //Todo
