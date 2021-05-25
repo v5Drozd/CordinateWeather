@@ -106,19 +106,20 @@ weatherApp.controller('forecastController', ['$scope', 'weatherService', '$resou
 
         dayToWhetherResponceInstance = new Map()
         allWeatherList.list.forEach((wheatherInstance) => {
-            let day = new Date(wheatherInstance.dt * 1000).addHours(+3);
-            let dayNumb = day.getDay();
-            console.log(" -0day "+ day + "/" + dayNumb)
-            
-            let day3 = new Date(wheatherInstance.dt * 1000);
-            day3.setTime(day3.getTime() + 3*60*60*1000);
-            let dayNumb3 = day3.getDay();
-            console.log(" +3hday "+ day3 + "/" + dayNumb3)
-            if (!dayToWhetherResponceInstance.has(dayNumb)) {
-                dayToWhetherResponceInstance.set(dayNumb, [wheatherInstance]);
+            let currentDate = new Date(wheatherInstance.dt * 1000).addHours(3);
+            let numbDayInWeek = currentDate.getDay();
+
+            let dd = String(currentDate.getDate()).padStart(2, '0');
+            let mm = String(currentDate.getMonth() + 1).padStart(2, '0');
+            let today = dd + '/' + mm + ' ' + currentDate.getHours() + ":" + currentDate.getMinutes();
+
+            wheatherInstance.dt_txt = today;
+
+            if (!dayToWhetherResponceInstance.has(numbDayInWeek)) {
+                dayToWhetherResponceInstance.set(numbDayInWeek, [wheatherInstance]);
             } else {
-                let keyForCurrentDay = dayToWhetherResponceInstance.get(dayNumb);
-                keyForCurrentDay.push(wheatherInstance);
+                let arrayTimeStampsForCurrentDay = dayToWhetherResponceInstance.get(numbDayInWeek);
+                arrayTimeStampsForCurrentDay.push(wheatherInstance);
             }
         }
         );
