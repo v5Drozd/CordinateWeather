@@ -21,40 +21,58 @@ weatherApp.config(function ($routeProvider) {
 
 })
 
-
-
-
-weatherApp.service('weatherService', function () {
-
+weatherApp.service('storeData', function () {
 
     var chMistoNemirovskeShose =
-        {
-            "name": "Немирівське Шосе 84",
-            "lat": "49.22687458369613",
-            "lon": "28.53870771897157"
-        }
+    {
+        "name": "Немирівське Шосе 84",
+        "lat": "49.22687458369613",
+        "lon": "28.53870771897157"
+    }
 
     let chMistoIakovaShepeliaSt =
-        {
-            "name": "Якова Штепеля",
-            "lat": "49.208530306399346",
-            "lon": "22.849301837142939"
-        }
+    {
+        "name": "Якова Штепеля",
+        "lat": "49.208530306399346",
+        "lon": "22.849301837142939"
+    }
 
     let chMistoBarskeShose =
-        {
-            "name": "Барське Шосе",
-            "lat": "49.23710269520618",
-            "lon": "28.398134459453864"
-        }
+    {
+        "name": "Барське Шосе",
+        "lat": "49.23710269520618",
+        "lon": "28.398134459453864"
+    }
+
+    let storedLocation = [chMistoNemirovskeShose, chMistoIakovaShepeliaSt, chMistoBarskeShose];
+    this.storedLocation = storedLocation;
+
+    let numberDayToDayName = new Map();
+    numberDayToDayName.set(1, 'Sunday');
+    numberDayToDayName.set(2, 'Monday');
+    numberDayToDayName.set(3, 'Tuesday');
+    numberDayToDayName.set(4, 'Wednesday');
+    numberDayToDayName.set(5, 'Thursday');
+    numberDayToDayName.set(6, 'Friday');
+    numberDayToDayName.set(0, 'Saturday');
+
+    this.numberDayToDayName = numberDayToDayName;
+
+
+})
+
+
+weatherApp.service('weatherService', ['storeData', function (storeData) {
+
+
 
     // var self = this;
     this.city = 'City'
-    this.chystiMista = [chMistoNemirovskeShose, chMistoIakovaShepeliaSt, chMistoBarskeShose];
+    this.chystiMista = storeData.storedLocation;
     this.searchingLocation = "";
-})
+}]);
 
-weatherApp.controller('homeController', ['$scope', 'weatherService', '$resource', function ($scope, weatherService, $resource) {
+weatherApp.controller('homeController', ['$scope', 'weatherService', '$resource', 'storeData', function ($scope, weatherService, $resource, storeData) {
 
 
     $scope.chystiMista = weatherService.chystiMista;
@@ -67,59 +85,51 @@ weatherApp.controller('homeController', ['$scope', 'weatherService', '$resource'
 }]);
 
 
-weatherApp.controller('forecastController', ['$scope', 'weatherService', '$resource', '$routeParams', function ($scope, weatherService, $resource, $routeParams) {
+weatherApp.controller('forecastController', ['$scope', 'weatherService', '$resource', '$routeParams', 'storeData', function ($scope, weatherService, $resource, $routeParams, storeData) {
 
     $scope.locatoinName = weatherService.searchingLocation.name;
     searvhingLat = weatherService.searchingLocation.lat;
     searvhingLon = weatherService.searchingLocation.lon;
 
-    $scope.days = $routeParams.days || 2;
+    timeZone = 3;
 
     $scope.weatherAPI = $resource("http://api.openweathermap.org/data/2.5/forecast",
-        {callback: "JSON_CALLBACK"}, {get: {method: "JSONP"}});
+        { callback: "JSON_CALLBACK" }, { get: { method: "JSONP" } });
 
-    let dayToWhetherResponceInstance = new Map()
-
-    $scope.weatherResault = $scope.weatherAPI.get({
+    this.weatherResault = $scope.weatherAPI.get({
         lat: searvhingLat,
         lon: searvhingLon,
         appid: '6704185231a3fc5312b081a7659a853b',
         units: 'metric',
         lang: 'ua'
     }).$promise.then(function (allWeatherList) {
-        // allWeatherList.list.forEach(element => console.log(element));
+
+        dayToWhetherResponceInstance = new Map()
         allWeatherList.list.forEach((wheatherInstance) => {
-                let day = new Date(wheatherInstance.dt * 1000);
-                let dayNumb = day.getDay();
-                if (!dayToWhetherResponceInstance.has(dayNumb)) {
-                    dayToWhetherResponceInstance.set(dayNumb, [wheatherInstance]);
-                } else {
-                    let keyForCurrentDay = dayToWhetherResponceInstance.get(dayNumb);
-                    keyForCurrentDay.push(wheatherInstance);
-                }
+            let day = new Date(wheatherInstance.dt * 1000).addHours(+3);
+            let dayNumb = day.getDay();
+            console.log(" -0day "+ day + "/" + dayNumb)
+            
+            let day3 = new Date(wheatherInstance.dt * 1000);
+            day3.setTime(day3.getTime() + 3*60*60*1000);
+            let dayNumb3 = day3.getDay();
+            console.log(" +3hday "+ day3 + "/" + dayNumb3)
+            if (!dayToWhetherResponceInstance.has(dayNumb)) {
+                dayToWhetherResponceInstance.set(dayNumb, [wheatherInstance]);
+            } else {
+                let keyForCurrentDay = dayToWhetherResponceInstance.get(dayNumb);
+                keyForCurrentDay.push(wheatherInstance);
             }
+        }
         );
         for (let [key, value] of dayToWhetherResponceInstance) {
-            console.log(key + ' = ' + value)
+            console.log(key + ' = ' + value);
         }
+        $scope.dayToWhetherResponceInstance = Object.fromEntries(dayToWhetherResponceInstance);
     });
 
-    console.log($scope.weatherResault);
-
-
-    $scope.convertToFahrenheit = function (degK) {
-        return Math.round((1.8 * (degK - 273)));
-
-    }
-
-    $scope.convertToDate = function (dt) {
-        //    return new Date(dt * 1000);
-        return dt;
-    }
+    Date.prototype.addHours = function(h) {
+        this.setTime(this.getTime() + (h*60*60*1000));
+        return this;
+      }
 }])
-
-//Todo
-// ImortantJustWhetherIntoHouse)
-
-// give posibility to set and call any location, 
-// direction in time)

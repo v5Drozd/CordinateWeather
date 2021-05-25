@@ -1,20 +1,12 @@
 <div>
-    <h2>Forecast {{locatoinName}}</h2>
+  <h2>Forecast {{locatoinName}}</h2>
 
-</div>
-<div ng-repeat ="w in weatherResault.list" >
-      
-    <div class="row">    
-        <div class="col-md-12">
-            <div class="panel panel-default">
-               <div class="panel-heading"> 
-                    <!-- <h3 class="panel-title">at {{convertToDate(w.dt) | date: 'yyyy-MM-dd HH:mm:ss'}} -->
-                        <h3 class="panel-title">at {{w.dt}}
-            </div>   
-                <div class="panel-body"></div> 
-                    temperature will be: {{w.main.temp}} , {{w.weather[0].description}}
-            </div>
-        </div>
-    </div>
-    
+
+  <div ng-repeat="(day, weekWeatherData) in dayToWhetherResponceInstance">
+
+     <h3> {{ day }} </h3>
+     <div ng-repeat="dayWeatherData in weekWeatherData">
+       "Fiiling like:" {{dayWeatherData.main.temp}} {{dayWeatherData.dt_txt}}
+</table>
+
 </div>
